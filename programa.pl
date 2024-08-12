@@ -98,12 +98,15 @@ algunoSeLaPierde(Grupo, Atraccion):-
 
 % Punto 4 
 
+parque(parqueDeLaCosta, [trenFantasma,montaniaRusa,maquinaTiquetera]).
+parque(parqueAcuatico, [toboganGigante,piscinaDeOlas,rioLento]).
+
 programaLogico(Programa):-
     estanEnMismoParque(Programa),
     noHayRepetidos(Programa).
 
 estanEnMismoParque(Programa):-
-    tieneAtraccion(Parque,Atracciones),
+    parque(_,Atracciones),
     forall(member(Atraccion,Programa),member(Atraccion,Atracciones)).
 
 noHayRepetidos([]).
@@ -111,10 +114,42 @@ noHayRepetidos([Cabeza|Cola]):-
     not(member(Cabeza, Cola)),
     noHayRepetidos(Cola).
 
-% Alternativa
-programaLogico2(Programa):-
-    estanEnMismoParque(Programa),
-    not(hayRepetidos(Programa)).
+% Punto 5
 
-hayRepetidos([X|XS]):- member(X,XS).
-hayRepetidos([_|XS]):- hayRepetidos(XS).
+hastaAca(_,[],[]).
+hastaAca(P,[Cabeza|_],[]):-
+    not(puedeSubir(P,Cabeza)).
+hastaAca(P,[Cabeza|Cola], [Cabeza|ColaS]):-
+    puedeSubir(P,Cabeza),
+    hastaAca(P,Cola,ColaS).
+
+% Pasaportes
+
+juegosComunes(maquinaTiquetera, 2).
+juegosComunes(trenFantasma, 5).
+juegosComunes(rioLento, 3).
+juegosComunes(piscinaDeOlas, 4).
+
+juegoPremium(montaniaRusa).
+juegoPremium(toboganGigante).
+
+
+%pasaporte(Tipo, CantCreditos, CantJuegosPremium).
+tienePasaporte(nina, basico(3)).
+tienePasaporte(marcos, flex(7, toboganGigante)).
+tienePasaporte(osvaldo, premium).
+
+
+puedeSubirPasaporte(Persona, Atraccion):-
+    puedeSubir(Persona,Atraccion),
+    tienePasaporte(Persona,Pasaporte),
+    forall(tieneAtraccion(_,Atraccion),habilita(Pasaporte,Atraccion)).
+
+habilita(premium,_).
+habilita(basico(Cant),Atraccion):-
+    juegosComunes(Atraccion, Necesarios),
+    Cant >= Necesarios.
+habilita(flex(_,Prioridad), Prioridad):-
+    juegoPremium(Prioridad).
+habilita(flex(CantCred, _),Atraccion):-
+    habilita(basico(CantCred),Atraccion).
